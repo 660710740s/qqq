@@ -102,15 +102,15 @@ const Navbar = () => {
               )}
             </Link>
 
-            {/* USER ICON */}
-            <button className="hover:opacity-90">
+            {/* USER ICON → GO LOGIN */}
+            <Link to="/login" className="hover:opacity-90">
               <svg xmlns="http://www.w3.org/2000/svg"
                 className="h-7 w-7 text-white transition"
                 fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round"
                   d="M5.5 20a9 9 0 1 1 13 0M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
               </svg>
-            </button>
+            </Link>
 
             {/* MOBILE MENU ICON */}
             <button

@@ -17,13 +17,16 @@ import BreedsPage from "./pages/BreedsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CartPage from "./pages/CartPage";
 import ReceiptPage from "./pages/ReceiptPage";
+import LoginPage from "./pages/LoginPage";
 
+// ⭐ Admin Page
+import AdminProductsPage from "./pages/AdminProductsPage";
 
 function App() {
   return (
     <div className="App">
 
-      {/* TEST TAILWIND (ลบได้) */}
+      {/* TEST TAILWIND */}
       <div className="bg-blue-500 h-10 text-white flex items-center justify-center">
         TEST TAILWIND
       </div>
@@ -36,8 +39,8 @@ function App() {
 
           {/* หน้าแรก */}
           <Route path="/" element={<HomePage />} />
-          
-          {/* หมวดหมู่แบบ Dynamic Route */}
+
+          {/* Dynamic Category */}
           <Route path="/category/:categoryName" element={<CategoryPage />} />
 
           {/* Books */}
@@ -48,20 +51,18 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
 
+          <Route path="/guide" element={<GuidePage />} />
+          <Route path="/products" element={<ProductPage />} />
+          <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<ReceiptPage />} />
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* ⭐ Admin Route */}
+          <Route path="/admin/products" element={<AdminProductsPage />} />
+
           {/* 404 */}
           <Route path="*" element={<NotFound />} />
-
-          <Route path="/guide" element={<GuidePage />} />
-          <Route path="/category/:categoryName" element={<CategoryPage />} />
-
-          <Route path="/products" element={<ProductPage />} />
-
-          <Route path="/product/:id" element={<ProductDetailPage />} />
-
-          <Route path="/cart" element={<CartPage />} />
-
-          <Route path="/checkout" element={<ReceiptPage />} />
-
         </Routes>
       </main>
 

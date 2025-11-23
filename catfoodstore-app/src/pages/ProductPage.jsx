@@ -13,7 +13,7 @@ const sampleProducts = [
     category: "dry",
     breed_type: ["all"],
     health: ["general"],
-    image_url: "/catfood/images/Royal Canin Kitten.jpg",
+    image_url: "/catfood/images/kitten.jpg",
   },
   {
     id: 2,
@@ -23,7 +23,7 @@ const sampleProducts = [
     category: "dry",
     breed_type: ["เปอร์เซีย", "บริติชช็อตแฮร์"],
     health: ["general"],
-    image_url: "/catfood/images/royal canin home life indoor.jpg",
+    image_url: "/catfood/images/indoor.jpg",
   },
   {
     id: 3,
@@ -33,8 +33,38 @@ const sampleProducts = [
     category: "dry",
     breed_type: ["all"],
     health: ["urinary"],
-    image_url: "/catfood/images/Royal Canin Urinary Care.jpg",
+    image_url: "/catfood/images/Urinary-Care.jpg",
   },
+  {
+  id: 4,
+  name: "Royal Canin Mother & Babycat Mousse",
+  price: 69,
+  age_group: "all",
+  category: "wet",
+  breed_type: ["all"],
+  health: ["general"],
+  image_url: "/catfood/images/mother-baby-wet.jpg",
+},
+{
+  id: 5,
+  name: "Royal Canin Persian Loaf",
+  price: 39,
+  age_group: "all",
+  category: "wet",
+  breed_type: ["persian"],
+  health: ["general"],
+  image_url: "/catfood/images/persian-loaf.jpg",  // ใช้รูปเดิมได้
+},
+{
+  id: 6,
+  name: "Royal Canin Wet Cat Food - Hair & Skin Pouch",
+  price: 35,
+  age_group: "special_care",
+  category: "wet",
+  breed_type: ["all"],
+  health: ["Hairball"],
+  image_url: "/catfood/images/hair-wet.jpg",
+},
 ];
 
 /* =====================================================

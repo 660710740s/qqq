@@ -15,7 +15,7 @@ const sampleProducts = [
     health: ["general"],
     description:
       "โภชนาการสำหรับลูกแมว 2–12 เดือน ช่วยเสริมภูมิคุ้มกันและการเจริญเติบโต",
-    image_url: "/catfood/images/Royal Canin Kitten.jpg",
+    image_url: "/catfood/images/kitten.jpg",
   },
   {
     id: 2,
@@ -27,7 +27,7 @@ const sampleProducts = [
     health: ["general"],
     description:
       "อาหารแมวโตเลี้ยงในบ้าน ลดกลิ่นอุจจาระ ควบคุมก้อนขน และพลังงานเหมาะสม",
-    image_url: "/catfood/images/royal canin home life indoor.jpg",
+    image_url: "/catfood/images/indoor.jpg",
   },
   {
     id: 3,
@@ -39,7 +39,7 @@ const sampleProducts = [
     health: ["urinary"],
     description:
       "ช่วยดูแลระบบปัสสาวะ ลดความเสี่ยงโรคนิ่วและการเกิดผลึกในแมวโต",
-    image_url: "/catfood/images/Royal Canin Urinary Care.jpg",
+    image_url: "/catfood/images/Urinary-Care.jpg",
   },
 ];
 

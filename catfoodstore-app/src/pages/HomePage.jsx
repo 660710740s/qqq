@@ -7,19 +7,19 @@ const sampleProducts = [
     id: 1,
     name: "Royal Canin Kitten",
     price: 450,
-    image_url: "/catfood/images/Royal Canin Kitten.jpg",
+    image_url: "/catfood/images/kitten.jpg",
   },
   {
     id: 2,
     name: "Royal Canin Home Life Indoor",
     price: 389,
-    image_url: "/catfood/images/royal canin home life indoor.jpg",
+    image_url: "/catfood/images/indoor.jpg",
   },
   {
     id: 3,
     name: "Royal Canin Urinary Care",
     price: 520,
-    image_url: "/catfood/images/Royal Canin Urinary Care.jpg",
+    image_url: "/catfood/images/Urinary-Care.jpg",
   },
 ];
 
@@ -61,17 +61,17 @@ export default function HomePage() {
         <CollectionGrid>
           <CollectionCard
             title="เปอร์เซีย"
-            img="/catfood/icons/persian.png"
+            img="/catfood/images/persian.Jpg"
             to="/products?breed=เปอร์เซีย"
           />
           <CollectionCard
             title="บริติชช็อตแฮร์"
-            img="/catfood/icons/british.png"
+            img="/catfood/images/british.Jpg"
             to="/products?breed=บริติชช็อตแฮร์"
           />
           <CollectionCard
             title="ทุกสายพันธุ์"
-            img="/catfood/icons/all-breeds.png"
+            img="/catfood/images/all.jpg"
             to="/products?breed=all"
           />
         </CollectionGrid>
@@ -82,17 +82,17 @@ export default function HomePage() {
         <CollectionGrid>
           <CollectionCard
             title="ลูกแมว (Kitten)"
-            img="/catfood/icons/kitten.png"
+            img="/catfood/images/allkitten.jpg"
             to="/products?age=kitten"
           />
           <CollectionCard
             title="แมวโต (Adult)"
-            img="/catfood/icons/adult.png"
+            img="/catfood/images/adult.jpg"
             to="/products?age=adult"
           />
           <CollectionCard
             title="สุขภาพพิเศษ"
-            img="/catfood/icons/health.png"
+            img="/catfood/images/health.jpg"
             to="/products?age=special_care"
           />
         </CollectionGrid>
@@ -103,7 +103,7 @@ export default function HomePage() {
         <CollectionGrid>
           <CollectionCard
             title="ระบบปัสสาวะ (Urinary)"
-            img="/catfood/icons/urinary.png"
+            img="/catfood/images/Urinary-Care.jpg"
             to="/products?health=urinary"
           />
           <CollectionCard
@@ -113,7 +113,7 @@ export default function HomePage() {
           />
           <CollectionCard
             title="ควบคุมน้ำหนัก"
-            img="/catfood/icons/weight.png"
+            img="/catfood/images/weight.jpg"
             to="/products?health=weight"
           />
         </CollectionGrid>

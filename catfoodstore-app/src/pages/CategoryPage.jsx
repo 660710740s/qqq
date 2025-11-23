@@ -9,16 +9,16 @@ const sampleProducts = [
     age_group: "kitten",
     category: "dry",
     breed_type: ["all"],
-    image_url: "/catfood/images/Royal Canin Kitten.jpg",
+    image_url: "/catfood/images/kitten.jpg",
   },
   {
     id: 2,
-    name: "Purina One Adult Chicken",
+    name: "Royal Canin Home Life Indoor",
     price: 389,
     age_group: "adult",
     category: "dry",
     breed_type: ["เปอร์เซีย", "บริติชช็อตแฮร์"],
-    image_url: "https://example.com/purina-adult.jpg",
+    image_url: "/catfood/images/indoor.jpg",
   },
   {
     id: 3,
@@ -27,7 +27,7 @@ const sampleProducts = [
     age_group: "special_care",
     category: "dry",
     breed_type: ["all"],
-    image_url: "/catfood/images/Royal Canin Urinary Care.jpg",
+    image_url: "/catfood/images/Urinary-Care.jpg",
   },
 ];
 
