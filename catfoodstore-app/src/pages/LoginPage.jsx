@@ -9,7 +9,7 @@ export default function LoginPage() {
 
   const navigate = useNavigate();
 
-  // ⭐ ใช้ ENV ถ้ามี (ดีที่สุด)
+  // ⭐ Backend URL
   const API_URL =
     process.env.REACT_APP_API_URL ||
     "https://super-duper-umbrella-4jrp44qjjggvc5qqj-8080.app.github.dev";
@@ -24,10 +24,9 @@ export default function LoginPage() {
 
     try {
       const res = await axios.post(`${API_URL}/api/login`, {
-  email,
-  password,
-});
-
+        email,
+        password,
+      });
 
       const { id, email: userEmail, role, token } = res.data;
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+const API_URL = "https://super-duper-umbrella-4jrp44qjjggvc5qqj-8080.app.github.dev";
+
 export default function AdminProductsPage() {
-  // เช็คสิทธิ์ก่อนเข้าหน้า
   useEffect(() => {
     const role = localStorage.getItem("role");
     if (role !== "admin") {
@@ -24,14 +25,14 @@ export default function AdminProductsPage() {
   const token = localStorage.getItem("token");
 
   // ==========================
-  // LOAD PRODUCTS FROM API
+  // LOAD PRODUCTS
   // ==========================
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("/api/products");
+      const res = await axios.get(`${API_URL}/api/products`);
       setProducts(res.data);
     } catch (err) {
-      console.error("Fetch error:", err);
+      console.log("Fetch error:", err);
     }
   };
 
@@ -40,7 +41,7 @@ export default function AdminProductsPage() {
   }, []);
 
   // ==========================
-  // ADD PRODUCT (POST)
+  // ADD PRODUCT
   // ==========================
   const addProduct = async () => {
     if (!newName || !newPrice || !newImage || !newDesc) {
@@ -50,7 +51,7 @@ export default function AdminProductsPage() {
 
     try {
       await axios.post(
-        "/api/admin/products",
+        `${API_URL}/api/admin/products`,
         {
           name: newName,
           description: newDesc,
@@ -62,9 +63,7 @@ export default function AdminProductsPage() {
           image_url: newImage,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -74,7 +73,6 @@ export default function AdminProductsPage() {
       setNewPrice("");
       setNewImage("");
       setNewDesc("");
-
       fetchProducts();
     } catch (err) {
       console.log("Add error:", err);
@@ -83,12 +81,12 @@ export default function AdminProductsPage() {
   };
 
   // ==========================
-  // UPDATE PRODUCT (PUT)
+  // UPDATE PRODUCT
   // ==========================
   const updateProduct = async () => {
     try {
       await axios.put(
-        `/api/admin/products/${editItem.id}`,
+        `${API_URL}/api/admin/products/${editItem.id}`,
         editItem,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -111,7 +109,7 @@ export default function AdminProductsPage() {
     if (!window.confirm("ต้องการลบสินค้านี้ใช่หรือไม่?")) return;
 
     try {
-      await axios.delete(`/api/admin/products/${id}`, {
+      await axios.delete(`${API_URL}/api/admin/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -129,7 +127,6 @@ export default function AdminProductsPage() {
         จัดการสินค้า (Admin)
       </h1>
 
-      {/* BUTTON ADD */}
       <div className="mb-4 flex justify-end">
         <button
           onClick={() => setShowAddForm(!showAddForm)}
@@ -139,7 +136,6 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
-      {/* ADD PRODUCT FORM */}
       {showAddForm && (
         <div className="border p-6 bg-gray-50 rounded-xl mb-6">
           <h2 className="text-xl font-semibold mb-4">เพิ่มสินค้าใหม่</h2>
@@ -186,7 +182,6 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* PRODUCT TABLE */}
       <table className="w-full border rounded-xl overflow-hidden">
         <thead>
           <tr className="bg-gray-200 text-center">
@@ -231,7 +226,6 @@ export default function AdminProductsPage() {
         </tbody>
       </table>
 
-      {/* EDIT POPUP */}
       {editItem && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
           <div className="bg-white p-6 rounded-xl w-96 shadow-lg">

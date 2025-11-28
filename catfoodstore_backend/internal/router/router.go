@@ -10,28 +10,33 @@ import (
     "catfoodstore_backend/internal/repository"
     "catfoodstore_backend/internal/service"
 
-    "github.com/gin-gonic/gin"
     "github.com/gin-contrib/cors"
+    "github.com/gin-gonic/gin"
 )
 
 func New(db *sql.DB) *gin.Engine {
     r := gin.New()
 
-    // ⭐⭐⭐ CORS สำหรับ Codespaces + Local DEV ⭐⭐⭐
+    // ⭐⭐⭐ CORS สำหรับ Codespaces + Local ⭐⭐⭐
     r.Use(cors.New(cors.Config{
         AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
         AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
         AllowCredentials: true,
+
+        // ✔ อนุญาตเฉพาะ domain ที่จำเป็น
         AllowOriginFunc: func(origin string) bool {
 
-            // อนุญาต origin จาก GitHub Codespaces เช่น:
-            // https://super-duper-umbrella-xxxx-3000.app.github.dev
+            // 🔹 GitHub Codespaces (ทั้ง Frontend 3000 & Backend 8080)
+            // ตัว URL จะเป็นแบบ:
+            // https://xxxx-3000.app.github.dev
+            // https://xxxx-8080.app.github.dev
             if strings.Contains(origin, "app.github.dev") {
                 return true
             }
 
-            // อนุญาต local frontend
-            if strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1") {
+            // 🔹 Localhost (รัน React บนเครื่อง)
+            if strings.Contains(origin, "localhost") ||
+                strings.Contains(origin, "127.0.0.1") {
                 return true
             }
 
@@ -39,7 +44,7 @@ func New(db *sql.DB) *gin.Engine {
         },
     }))
 
-    // Middlewares
+    // Logging + Recover
     r.Use(middleware.Logger())
     r.Use(middleware.Recover())
 
@@ -68,7 +73,7 @@ func New(db *sql.DB) *gin.Engine {
     productHandler.RegisterRoutes(r)
 
     // -----------------------------
-    // USER MODULE (LOGIN)
+    // USER MODULE
     // -----------------------------
     userRepo := repository.NewUserRepository(db)
     userService := service.NewUserService(userRepo)
@@ -76,7 +81,7 @@ func New(db *sql.DB) *gin.Engine {
     userHandler.RegisterRoutes(r)
 
     // -----------------------------
-    // ADMIN MODULE (PROTECTED)
+    // ADMIN ROUTES (Protected)
     // -----------------------------
     admin := r.Group("/api/admin")
     admin.Use(middleware.AuthMiddleware, middleware.AdminOnly)
