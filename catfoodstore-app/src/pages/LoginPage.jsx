@@ -9,6 +9,11 @@ export default function LoginPage() {
 
   const navigate = useNavigate();
 
+  // ⭐ ใช้ ENV ถ้ามี (ดีที่สุด)
+  const API_URL =
+    process.env.REACT_APP_API_URL ||
+    "https://super-duper-umbrella-4jrp44qjjggvc5qqj-8080.app.github.dev";
+
   const handleLogin = async () => {
     setError("");
 
@@ -18,15 +23,15 @@ export default function LoginPage() {
     }
 
     try {
-      // ⭐ เชื่อม backend โดยตรงผ่าน port 8080
-      const res = await axios.post("http://localhost:8080/api/login", {
-        email,
-        password,
-      });
+      const res = await axios.post(`${API_URL}/api/login`, {
+  email,
+  password,
+});
+
 
       const { id, email: userEmail, role, token } = res.data;
 
-      // ⭐ เก็บ token ไว้ใช้กับ API อื่น ๆ
+      // ⭐ เก็บข้อมูลใน localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userEmail", userEmail);
@@ -35,14 +40,20 @@ export default function LoginPage() {
 
       alert("เข้าสู่ระบบสำเร็จ!");
 
+      // ⭐ เปลี่ยนหน้าเมื่อเข้าสู่ระบบสำเร็จ
       if (role === "admin") {
         navigate("/admin/products");
       } else {
         navigate("/");
       }
     } catch (err) {
-      console.log("Login error:", err);
-      setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      console.error("Login error:", err);
+
+      if (err.response) {
+        setError(err.response.data.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      } else {
+        setError("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
+      }
     }
   };
 

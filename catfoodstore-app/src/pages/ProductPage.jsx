@@ -1,39 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-
-/* SAMPLE PRODUCTS */
-const sampleProducts = [
-  {
-    id: 1,
-    name: "Royal Canin Kitten",
-    price: 450,
-    age_group: "kitten",
-    category: "dry",
-    breed_type: ["all"],
-    health: ["general"],
-    image_url: "/catfood/images/kitten.jpg",
-  },
-  {
-    id: 2,
-    name: "Royal Canin Home Life Indoor",
-    price: 389,
-    age_group: "adult",
-    category: "dry",
-    breed_type: ["เปอร์เซีย", "บริติชช็อตแฮร์"],
-    health: ["general"],
-    image_url: "/catfood/images/indoor.jpg",
-  },
-  {
-    id: 3,
-    name: "Royal Canin Urinary Care",
-    price: 520,
-    age_group: "special_care",
-    category: "dry",
-    breed_type: ["all"],
-    health: ["urinary"],
-    image_url: "/catfood/images/Urinary-Care.jpg",
-  },
-];
+import axios from "axios";
 
 export default function ProductListPage() {
   const location = useLocation();
@@ -51,19 +18,29 @@ export default function ProductListPage() {
   const [filtered, setFiltered] = useState([]);
   const [toast, setToast] = useState(null);
 
-  /* โหลดสินค้า */
+  /* ⭐ โหลดสินค้าแบบดึง API จริง */
   useEffect(() => {
-    const saved = localStorage.getItem("products");
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get("http://localhost:8080/api/products");
+        const products = res.data;
 
-    if (saved) {
-      const products = JSON.parse(saved);
-      setAllProducts(products);
-      setFiltered(products);
-    } else {
-      localStorage.setItem("products", JSON.stringify(sampleProducts));
-      setAllProducts(sampleProducts);
-      setFiltered(sampleProducts);
-    }
+        // เติม field health ให้ทุกสินค้าที่ไม่มี เพื่อป้องกัน error filter
+        const normalized = products.map((p) => ({
+          ...p,
+          health: p.health || [], // backend ไม่มี field health แต่ frontend ใช้ filter
+        }));
+
+        setAllProducts(normalized);
+        setFiltered(normalized);
+      } catch (err) {
+        console.error("❌ โหลดสินค้าจาก API ไม่สำเร็จ", err);
+        setAllProducts([]);
+        setFiltered([]);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   /* เพิ่มลงตะกร้า */
@@ -89,7 +66,9 @@ export default function ProductListPage() {
     if (filters.age) result = result.filter((p) => p.age_group === filters.age);
     if (filters.health)
       result = result.filter((p) =>
-        p.health.map((h) => h.toLowerCase()).includes(filters.health.toLowerCase())
+        (p.health || [])
+          .map((h) => h.toLowerCase())
+          .includes(filters.health.toLowerCase())
       );
     if (filters.breed)
       result = result.filter(
@@ -104,13 +83,11 @@ export default function ProductListPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
-
       <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">เลือกประเภทอาหาร</h1>
 
       <QuickFoodType filters={filters} setFilter={updateFilter} />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mt-10">
-
         {/* FILTER */}
         <aside className="md:col-span-1 bg-white border rounded-xl shadow-sm p-6 h-fit">
           <div className="flex justify-between mb-4">
@@ -168,13 +145,15 @@ export default function ProductListPage() {
         </main>
       </div>
 
-      {/* ⭐ Toast */}
+      {/* Toast */}
       {toast && (
-        <div className="
+        <div
+          className="
           fixed bottom-6 left-1/2 -translate-x-1/2 
           bg-black/80 text-white px-5 py-3 rounded-xl 
           text-sm shadow-lg animate-fadeIn z-50
-        ">
+        "
+        >
           {toast}
         </div>
       )}
@@ -185,10 +164,12 @@ export default function ProductListPage() {
 /* PRODUCT CARD ------------------------------------------------- */
 function ProductCard({ product, addToCart }) {
   return (
-    <div className="
+    <div
+      className="
       bg-white border rounded-2xl overflow-hidden shadow-sm 
       hover:shadow-xl transition-all duration-300 group flex flex-col
-    ">
+    "
+    >
       <div className="relative">
         <Link to={`/product/${product.id}`}>
           <img
@@ -204,9 +185,7 @@ function ProductCard({ product, addToCart }) {
       </div>
 
       <div className="flex flex-col flex-grow p-4">
-        <h3 className="font-semibold text-lg text-gray-900 min-h-[50px]">
-          {product.name}
-        </h3>
+        <h3 className="font-semibold text-lg text-gray-900 min-h-[50px]">{product.name}</h3>
 
         <p className="text-red-600 font-bold mb-3">{product.price} ฿</p>
 
@@ -234,9 +213,21 @@ function ProductCard({ product, addToCart }) {
 function QuickFoodType({ filters, setFilter }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <LargeCard label="อาหารเม็ด" active={filters.type === "dry"} onClick={() => setFilter("type", "dry")} />
-      <LargeCard label="อาหารเปียก" active={filters.type === "wet"} onClick={() => setFilter("type", "wet")} />
-      <LargeCard label="ขนมแมว" active={filters.type === "snack"} onClick={() => setFilter("type", "snack")} />
+      <LargeCard
+        label="อาหารเม็ด"
+        active={filters.type === "dry"}
+        onClick={() => setFilter("type", "dry")}
+      />
+      <LargeCard
+        label="อาหารเปียก"
+        active={filters.type === "wet"}
+        onClick={() => setFilter("type", "wet")}
+      />
+      <LargeCard
+        label="ขนมแมว"
+        active={filters.type === "snack"}
+        onClick={() => setFilter("type", "snack")}
+      />
     </div>
   );
 }
@@ -246,8 +237,11 @@ function LargeCard({ label, active, onClick }) {
     <button
       onClick={onClick}
       className={`w-full p-6 rounded-xl text-center border font-semibold text-lg transition
-        ${active ? "bg-red-600 text-white border-red-600 shadow-md"
-                : "bg-white text-gray-800 border-gray-300 hover:shadow-md"}`}
+        ${
+          active
+            ? "bg-red-600 text-white border-red-600 shadow-md"
+            : "bg-white text-gray-800 border-gray-300 hover:shadow-md"
+        }`}
     >
       {label}
     </button>
@@ -266,7 +260,9 @@ function DropdownSelect({ label, value, options, onChange }) {
         className="w-full border rounded-lg px-3 py-2 bg-gray-50 hover:bg-gray-100 transition"
       >
         {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
         ))}
       </select>
     </div>

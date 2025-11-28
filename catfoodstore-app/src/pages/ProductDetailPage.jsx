@@ -1,77 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-
-/* ===============================
-   SAMPLE PRODUCTS (ใช้เป็น fallback)
-=============================== */
-const sampleProducts = [
-  {
-    id: 1,
-    name: "Royal Canin Kitten",
-    price: 450,
-    age_group: "kitten",
-    category: "dry",
-    breed_type: ["all"],
-    health: ["general"],
-    description: "โภชนาการสำหรับลูกแมว 2–12 เดือน",
-    image_url: "/catfood/images/kitten.jpg",
-  },
-  {
-    id: 2,
-    name: "Royal Canin Home Life Indoor",
-    price: 389,
-    age_group: "adult",
-    category: "dry",
-    breed_type: ["เปอร์เซีย", "บริติชช็อตแฮร์"],
-    health: ["general"],
-    description: "อาหารแมวโตเลี้ยงในบ้าน",
-    image_url: "/catfood/images/indoor.jpg",
-  },
-  {
-    id: 3,
-    name: "Royal Canin Urinary Care",
-    price: 520,
-    age_group: "special_care",
-    category: "dry",
-    breed_type: ["all"],
-    health: ["urinary"],
-    description: "ช่วยดูแลระบบปัสสาวะ",
-    image_url: "/catfood/images/Urinary-Care.jpg",
-  },
-  {
-    id: 4,
-    name: "Royal Canin Mother & Babycat Mousse",
-    price: 69,
-    age_group: "all",
-    category: "wet",
-    breed_type: ["all"],
-    health: ["general"],
-    description: "สูตรอ่อนโยนสำหรับลูกแมวแรกเกิด",
-    image_url: "/catfood/images/mother-baby-wet.jpg",
-  },
-  {
-    id: 5,
-    name: "Royal Canin Persian Loaf",
-    price: 39,
-    age_group: "all",
-    category: "wet",
-    breed_type: ["persian"],
-    health: ["general"],
-    description: "สูตรเฉพาะสำหรับแมวเปอร์เซีย",
-    image_url: "/catfood/images/persian-loaf.jpg",
-  },
-  {
-    id: 6,
-    name: "Royal Canin Hair & Skin Pouch",
-    price: 35,
-    age_group: "special_care",
-    category: "wet",
-    breed_type: ["all"],
-    health: ["hairball"],
-    description: "ช่วยลดก้อนขน ดูแลผิวหนังและขน",
-    image_url: "/catfood/images/hair-wet.jpg",
-  },
-];
+import axios from "axios";
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -81,28 +10,26 @@ export default function ProductDetailPage() {
   const [favorites, setFavorites] = useState([]);
   const [cart, setCart] = useState([]);
 
-  /* ================================================
-     LOAD PRODUCT (จาก localStorage → fallback sample)
-  ================================================= */
+  /* โหลดสินค้าจาก API จริง */
   useEffect(() => {
-    const saved = localStorage.getItem("products");
-    let products = sampleProducts;
-
-    if (saved) {
+    const fetchProduct = async () => {
       try {
-        products = JSON.parse(saved);
-      } catch {
-        products = sampleProducts;
-      }
-    }
+        const res = await axios.get(`http://localhost:8080/api/products/${id}`);
 
-    const found = products.find((p) => p.id === Number(id));
-    setProduct(found || null);
+        setProduct({
+          ...res.data,
+          health: res.data.health || [], // ป้องกัน null
+        });
+      } catch (err) {
+        console.error("API ERROR:", err);
+        setProduct(null);
+      }
+    };
+
+    fetchProduct();
   }, [id]);
 
-  /* ================================================
-     LOAD FAVORITES + CART
-  ================================================= */
+  /* LOAD FAVORITES & CART */
   useEffect(() => {
     const savedFav = JSON.parse(localStorage.getItem("favorites")) || [];
     const savedCart = JSON.parse(localStorage.getItem("cart")) || [];
