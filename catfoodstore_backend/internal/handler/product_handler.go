@@ -1,125 +1,85 @@
 package handler
 
 import (
+	"net/http"
 	"strconv"
 
-	"catfoodstore_backend/internal/models"
-	"catfoodstore_backend/internal/service"
-
 	"github.com/gin-gonic/gin"
+	"catfoodstore_backend/internal/repository"
+	"catfoodstore_backend/internal/service"
 )
 
 type ProductHandler struct {
-	svc service.ProductService
+	service *service.ProductService
 }
 
-func NewProductHandler(s service.ProductService) *ProductHandler {
-	return &ProductHandler{svc: s}
-}
-
-func (h *ProductHandler) RegisterRoutes(r *gin.Engine) {
-	api := r.Group("/api/products")
-	{
-		api.GET("", h.GetAll)
-		api.GET("/:id", h.GetByID)
-		api.POST("", h.Create)
-		api.PUT("/:id", h.Update)
-		api.DELETE("/:id", h.Delete)
-	}
+func NewProductHandler(s *service.ProductService) *ProductHandler {
+	return &ProductHandler{service: s}
 }
 
 func (h *ProductHandler) GetAll(c *gin.Context) {
-	list, err := h.svc.GetAll(c.Request.Context())
+	res, err := h.service.GetAll()
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "โหลดสินค้าไม่สำเร็จ"})
 		return
 	}
-	c.JSON(200, list)
+	c.JSON(http.StatusOK, res)
 }
 
 func (h *ProductHandler) GetByID(c *gin.Context) {
-	id, err := parseID(c)
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+
+	item, err := h.service.GetByID(id)
 	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ไม่พบสินค้า"})
 		return
 	}
 
-	p, err := h.svc.GetByID(c.Request.Context(), id)
-	if err == service.ErrProductNotFound {
-		c.JSON(404, gin.H{"error": "product not found"})
-		return
-	}
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(200, p)
+	c.JSON(http.StatusOK, item)
 }
 
 func (h *ProductHandler) Create(c *gin.Context) {
-	var p models.Product
-	if err := c.ShouldBindJSON(&p); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+	var p repository.Product
+
+	if err := c.BindJSON(&p); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "รูปแบบข้อมูลไม่ถูกต้อง"})
 		return
 	}
 
-	id, err := h.svc.Create(c.Request.Context(), &p)
-	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+	if err := h.service.Create(p); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "เพิ่มสินค้าไม่สำเร็จ"})
 		return
 	}
 
-	c.JSON(201, gin.H{"id": id})
+	c.JSON(http.StatusOK, gin.H{"message": "เพิ่มสินค้าแล้ว"})
 }
 
 func (h *ProductHandler) Update(c *gin.Context) {
-	id, err := parseID(c)
-	if err != nil {
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+
+	var p repository.Product
+	if err := c.BindJSON(&p); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ข้อมูลไม่ถูกต้อง"})
 		return
 	}
 
-	var p models.Product
-	if err := c.ShouldBindJSON(&p); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+	p.ID = id
+
+	if err := h.service.Update(p); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "อัปเดตไม่สำเร็จ"})
 		return
 	}
 
-	if err := h.svc.Update(c.Request.Context(), id, &p); err != nil {
-		if err == service.ErrProductNotFound {
-			c.JSON(404, gin.H{"error": "product not found"})
-			return
-		}
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(200, gin.H{"message": "updated"})
+	c.JSON(http.StatusOK, gin.H{"message": "แก้ไขสินค้าเรียบร้อย"})
 }
 
 func (h *ProductHandler) Delete(c *gin.Context) {
-	id, err := parseID(c)
-	if err != nil {
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+
+	if err := h.service.Delete(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ลบสินค้าไม่สำเร็จ"})
 		return
 	}
 
-	if err := h.svc.Delete(c.Request.Context(), id); err != nil {
-		if err == service.ErrProductNotFound {
-			c.JSON(404, gin.H{"error": "product not found"})
-			return
-		}
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(200, gin.H{"message": "deleted"})
-}
-
-func parseID(c *gin.Context) (int64, error) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		c.JSON(400, gin.H{"error": "invalid id"})
-		return 0, err
-	}
-	return id, nil
+	c.JSON(http.StatusOK, gin.H{"message": "ลบสินค้าแล้ว"})
 }

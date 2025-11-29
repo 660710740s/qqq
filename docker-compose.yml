@@ -1,25 +1,25 @@
 services:
   db:
-    build: ./catfoodstore_db/docker
+    image: postgres:17-alpine
     container_name: catfoodstore_postgres
     env_file:
       - ./catfoodstore_db/.env
+    ports:
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./catfoodstore_db/docker/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5433:5432"
     restart: unless-stopped
 
   backend:
     build:
       context: ./catfoodstore_backend
       dockerfile: Dockerfile
-    container_name: catfoodfoodstore_backend
+    container_name: catfoodstore_backend
     env_file:
       - ./catfoodstore_backend/.env
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     depends_on:
       - db
     restart: unless-stopped
@@ -29,10 +29,6 @@ services:
       context: ./catfoodstore-app
       dockerfile: Dockerfile
     container_name: catfoodstore_frontend
-    ports:
-      - "3000:3000"
-    stdin_open: true
-    tty: true
     restart: unless-stopped
 
   nginx:
@@ -41,20 +37,12 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./catfoodstore-app/build:/usr/share/nginx/html
     depends_on:
-      - frontend
       - backend
-
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: catfoodstore_pgadmin
-    env_file:
-      - ./catfoodstore_db/.env
-    ports:
-      - "5055:80"
-    depends_on:
-      - db
+      - frontend
+    restart: unless-stopped
 
 volumes:
   postgres_data:

@@ -1,20 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const API_URL = "https://super-duper-umbrella-4jrp44qjjggvc5qqj-8080.app.github.dev";
+/* ⭐ React → /api → Nginx → backend */
+const API_URL = "/api";
 
 export default function AdminProductsPage() {
-  useEffect(() => {
-    const role = localStorage.getItem("role");
-    if (role !== "admin") {
-      alert("คุณไม่มีสิทธิ์เข้าหน้านี้");
-      window.location.href = "/";
-    }
-  }, []);
-
   const [products, setProducts] = useState([]);
-
   const [showAddForm, setShowAddForm] = useState(false);
+
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newImage, setNewImage] = useState("");
@@ -23,26 +16,35 @@ export default function AdminProductsPage() {
   const [editItem, setEditItem] = useState(null);
 
   const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
 
-  // ==========================
-  // LOAD PRODUCTS
-  // ==========================
-  const fetchProducts = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/products`);
-      setProducts(res.data);
-    } catch (err) {
-      console.log("Fetch error:", err);
-    }
-  };
-
+  /* ⭐ ตรวจสิทธิ์เฉพาะ Admin เท่านั้น */
   useEffect(() => {
+    if (role !== "admin") {
+      alert("คุณไม่มีสิทธิ์เข้าหน้านี้");
+      window.location.href = "/";
+      return;
+    }
     fetchProducts();
   }, []);
 
-  // ==========================
-  // ADD PRODUCT
-  // ==========================
+  /* ⭐ โหลดสินค้า */
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/products`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setProducts(res.data);
+    } catch (err) {
+      console.error("Fetch error:", err);
+      alert("โหลดสินค้าล้มเหลว");
+    }
+  };
+
+  /* ⭐ เพิ่มสินค้าใหม่ */
   const addProduct = async () => {
     if (!newName || !newPrice || !newImage || !newDesc) {
       alert("กรุณากรอกข้อมูลให้ครบ");
@@ -51,7 +53,7 @@ export default function AdminProductsPage() {
 
     try {
       await axios.post(
-        `${API_URL}/api/admin/products`,
+        `${API_URL}/admin/products`,
         {
           name: newName,
           description: newDesc,
@@ -63,61 +65,65 @@ export default function AdminProductsPage() {
           image_url: newImage,
         },
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
       alert("เพิ่มสินค้าสำเร็จ");
       setShowAddForm(false);
+
       setNewName("");
       setNewPrice("");
       setNewImage("");
       setNewDesc("");
+
       fetchProducts();
     } catch (err) {
-      console.log("Add error:", err);
+      console.error("Add error:", err);
       alert("เพิ่มสินค้าไม่สำเร็จ");
     }
   };
 
-  // ==========================
-  // UPDATE PRODUCT
-  // ==========================
+  /* ⭐ อัปเดตสินค้า */
   const updateProduct = async () => {
     try {
       await axios.put(
-        `${API_URL}/api/admin/products/${editItem.id}`,
+        `${API_URL}/admin/products/${editItem.id}`,
         editItem,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
-      alert("บันทึกการแก้ไขสำเร็จ");
+      alert("แก้ไขข้อมูลสำเร็จ");
       setEditItem(null);
       fetchProducts();
     } catch (err) {
-      console.log("Update error:", err);
-      alert("แก้ไขไม่สำเร็จ");
+      console.error("Update error:", err);
+      alert("แก้ไขสินค้าไม่สำเร็จ");
     }
   };
 
-  // ==========================
-  // DELETE PRODUCT
-  // ==========================
+  /* ⭐ ลบสินค้า */
   const deleteProduct = async (id) => {
     if (!window.confirm("ต้องการลบสินค้านี้ใช่หรือไม่?")) return;
 
     try {
-      await axios.delete(`${API_URL}/api/admin/products/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      await axios.delete(`${API_URL}/admin/products/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       alert("ลบสินค้าสำเร็จ");
       fetchProducts();
     } catch (err) {
-      console.log("Delete error:", err);
-      alert("ลบไม่สำเร็จ");
+      console.error("Delete error:", err);
+      alert("ลบสินค้าไม่สำเร็จ");
     }
   };
 
@@ -127,6 +133,7 @@ export default function AdminProductsPage() {
         จัดการสินค้า (Admin)
       </h1>
 
+      {/* ปุ่มเพิ่มสินค้า */}
       <div className="mb-4 flex justify-end">
         <button
           onClick={() => setShowAddForm(!showAddForm)}
@@ -136,52 +143,7 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
-      {showAddForm && (
-        <div className="border p-6 bg-gray-50 rounded-xl mb-6">
-          <h2 className="text-xl font-semibold mb-4">เพิ่มสินค้าใหม่</h2>
-
-          <div className="grid gap-4">
-            <input
-              type="text"
-              placeholder="ชื่อสินค้า"
-              className="border p-2 rounded"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-            />
-
-            <input
-              type="number"
-              placeholder="ราคา"
-              className="border p-2 rounded"
-              value={newPrice}
-              onChange={(e) => setNewPrice(e.target.value)}
-            />
-
-            <input
-              type="text"
-              placeholder="ลิงก์รูปสินค้า"
-              className="border p-2 rounded"
-              value={newImage}
-              onChange={(e) => setNewImage(e.target.value)}
-            />
-
-            <textarea
-              placeholder="รายละเอียดสินค้า"
-              className="border p-2 rounded h-24"
-              value={newDesc}
-              onChange={(e) => setNewDesc(e.target.value)}
-            ></textarea>
-          </div>
-
-          <button
-            onClick={addProduct}
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            บันทึกสินค้า
-          </button>
-        </div>
-      )}
-
+      {/* ตารางสินค้า */}
       <table className="w-full border rounded-xl overflow-hidden">
         <thead>
           <tr className="bg-gray-200 text-center">
@@ -198,7 +160,6 @@ export default function AdminProductsPage() {
               <td className="border p-2">
                 <img
                   src={p.image_url}
-                  alt={p.name}
                   className="w-16 h-16 object-cover mx-auto rounded"
                 />
               </td>
@@ -213,7 +174,6 @@ export default function AdminProductsPage() {
                 >
                   แก้ไข
                 </button>
-
                 <button
                   onClick={() => deleteProduct(p.id)}
                   className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
@@ -226,6 +186,7 @@ export default function AdminProductsPage() {
         </tbody>
       </table>
 
+      {/* Modal แก้ไขสินค้า */}
       {editItem && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
           <div className="bg-white p-6 rounded-xl w-96 shadow-lg">
@@ -268,15 +229,15 @@ export default function AdminProductsPage() {
 
             <div className="flex justify-end space-x-3">
               <button
-                onClick={() => setEditItem(null)}
                 className="px-4 py-2 bg-gray-400 text-white rounded"
+                onClick={() => setEditItem(null)}
               >
                 ยกเลิก
               </button>
 
               <button
-                onClick={updateProduct}
                 className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={updateProduct}
               >
                 บันทึก
               </button>

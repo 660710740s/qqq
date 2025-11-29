@@ -1,141 +1,103 @@
 package repository
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
-
-	"catfoodstore_backend/internal/models"
-
-	"github.com/lib/pq"
+	"errors"
+	"strings"
 )
 
-type ProductRepository interface {
-	FindAll(ctx context.Context) ([]*models.Product, error)
-	FindByID(ctx context.Context, id int64) (*models.Product, error)
-	Create(ctx context.Context, p *models.Product) (int64, error)
-	Update(ctx context.Context, p *models.Product) error
-	Delete(ctx context.Context, id int64) error
+type Product struct {
+	ID          int64
+	Name        string
+	Description string
+	Price       float64
+	Weight      string
+	AgeGroup    string
+	BreedType   []string
+	Category    string
+	ImageURL    string
 }
 
-type productRepo struct {
+type ProductRepository struct {
 	db *sql.DB
 }
 
 func NewProductRepository(db *sql.DB) ProductRepository {
-	return &productRepo{db: db}
+	return ProductRepository{db: db}
 }
 
-func (r *productRepo) FindAll(ctx context.Context) ([]*models.Product, error) {
-	rows, err := r.db.QueryContext(ctx, `
-        SELECT id, name, description, price, weight,
-               age_group, breed_type, category, image_url,
-               created_at, updated_at
-        FROM products ORDER BY id ASC`)
+func (r ProductRepository) GetAll() ([]Product, error) {
+	rows, err := r.db.Query(`
+		SELECT id, name, description, price, weight, age_group, breed_type, category, image_url
+		FROM products
+	`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var list []*models.Product
-
+	var items []Product
 	for rows.Next() {
-		var p models.Product
-		var breeds pq.StringArray
+		var p Product
+		var breedArr string
 
-		if err := rows.Scan(
-			&p.ID, &p.Name, &p.Description, &p.Price, &p.Weight,
-			&p.AgeGroup, &breeds, &p.Category, &p.ImageURL,
-			&p.CreatedAt, &p.UpdatedAt,
-		); err != nil {
+		err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Weight,
+			&p.AgeGroup, &breedArr, &p.Category, &p.ImageURL)
+		if err != nil {
 			return nil, err
 		}
 
-		p.BreedType = []string(breeds)
-		list = append(list, &p)
-	}
+		p.BreedType = strings.Split(strings.Trim(breedArr, "{}"), ",")
 
-	return list, rows.Err()
+		items = append(items, p)
+	}
+	return items, nil
 }
 
-func (r *productRepo) FindByID(ctx context.Context, id int64) (*models.Product, error) {
-	row := r.db.QueryRowContext(ctx, `
-        SELECT id, name, description, price, weight,
-               age_group, breed_type, category, image_url,
-               created_at, updated_at
-        FROM products WHERE id = $1`, id)
+func (r ProductRepository) GetByID(id int64) (*Product, error) {
+	row := r.db.QueryRow(`
+		SELECT id, name, description, price, weight, age_group, breed_type, category, image_url 
+		FROM products WHERE id=$1
+	`, id)
 
-	var p models.Product
-	var breeds pq.StringArray
+	var p Product
+	var breedArr string
 
-	if err := row.Scan(
-		&p.ID, &p.Name, &p.Description, &p.Price, &p.Weight,
-		&p.AgeGroup, &breeds, &p.Category, &p.ImageURL,
-		&p.CreatedAt, &p.UpdatedAt,
-	); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
+	err := row.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Weight,
+		&p.AgeGroup, &breedArr, &p.Category, &p.ImageURL)
+
+	if err != nil {
+		return nil, errors.New("ไม่พบสินค้า")
 	}
 
-	p.BreedType = []string(breeds)
+	p.BreedType = strings.Split(strings.Trim(breedArr, "{}"), ",")
+
 	return &p, nil
 }
 
-func (r *productRepo) Create(ctx context.Context, p *models.Product) (int64, error) {
-	var id int64
-	breeds := pq.StringArray(p.BreedType)
+func (r ProductRepository) Create(p Product) error {
+	_, err := r.db.Exec(`
+		INSERT INTO products (name, description, price, weight, age_group, breed_type, category, image_url)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+	`, p.Name, p.Description, p.Price, p.Weight, p.AgeGroup,
+		"{"+strings.Join(p.BreedType, ",")+"}", p.Category, p.ImageURL)
 
-	err := r.db.QueryRowContext(ctx, `
-        INSERT INTO products
-        (name, description, price, weight, age_group,
-         breed_type, category, image_url)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-        RETURNING id`,
-		p.Name, p.Description, p.Price, p.Weight,
-		p.AgeGroup, breeds, p.Category, p.ImageURL,
-	).Scan(&id)
-
-	if err != nil {
-		return 0, fmt.Errorf("insert product: %w", err)
-	}
-	return id, nil
+	return err
 }
 
-func (r *productRepo) Update(ctx context.Context, p *models.Product) error {
-	breeds := pq.StringArray(p.BreedType)
+func (r ProductRepository) Update(p Product) error {
+	_, err := r.db.Exec(`
+		UPDATE products SET 
+			name=$1, description=$2, price=$3, weight=$4,
+			age_group=$5, breed_type=$6, category=$7, image_url=$8
+		WHERE id=$9
+	`, p.Name, p.Description, p.Price, p.Weight, p.AgeGroup,
+		"{"+strings.Join(p.BreedType, ",")+"}", p.Category, p.ImageURL, p.ID)
 
-	res, err := r.db.ExecContext(ctx, `
-        UPDATE products SET
-            name=$1, description=$2, price=$3, weight=$4,
-            age_group=$5, breed_type=$6, category=$7, image_url=$8,
-            updated_at=NOW()
-        WHERE id=$9`,
-		p.Name, p.Description, p.Price, p.Weight,
-		p.AgeGroup, breeds, p.Category, p.ImageURL, p.ID,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	if affected, _ := res.RowsAffected(); affected == 0 {
-		return sql.ErrNoRows
-	}
-
-	return nil
+	return err
 }
 
-func (r *productRepo) Delete(ctx context.Context, id int64) error {
-	res, err := r.db.ExecContext(ctx, `DELETE FROM products WHERE id=$1`, id)
-	if err != nil {
-		return err
-	}
-
-	if affected, _ := res.RowsAffected(); affected == 0 {
-		return sql.ErrNoRows
-	}
-
-	return nil
+func (r ProductRepository) Delete(id int64) error {
+	_, err := r.db.Exec(`DELETE FROM products WHERE id=$1`, id)
+	return err
 }

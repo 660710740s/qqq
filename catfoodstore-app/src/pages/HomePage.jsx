@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
+/* ⭐ ยิงผ่าน Nginx Proxy */
+const API_URL = "/api";
+
 export default function HomePage() {
   const [toast, setToast] = useState(null);
   const [products, setProducts] = useState([]);
@@ -11,7 +14,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/products");
+        const res = await axios.get(`${API_URL}/products`);
         const items = res.data;
 
         // + badge: 5 รายการแรกเป็นสินค้าใหม่
@@ -26,7 +29,7 @@ export default function HomePage() {
         const breedsMap = {};
         enhanced.forEach((p) => {
           (p.breed_type || []).forEach((breed) => {
-            if (breed === "all") return; // ไม่เอา all
+            if (breed === "all") return;
             if (!breedsMap[breed]) breedsMap[breed] = [];
             breedsMap[breed].push(p);
           });
@@ -41,7 +44,7 @@ export default function HomePage() {
     fetchProducts();
   }, []);
 
-  /* 🛒 เพิ่มลงตะกร้า */
+  /* ⭐ เพิ่มลงตะกร้า */
   const addToCart = (product) => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     const index = cart.findIndex((i) => i.id === product.id);
@@ -65,7 +68,6 @@ export default function HomePage() {
         style={{ backgroundImage: "url('/catfood/images/canin2.jpg')" }}
       >
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-10 items-center backdrop-blur-sm bg-white/10 p-6 rounded-2xl">
-
           <div>
             <h1 className="text-5xl font-bold text-red-600 leading-tight">
               โภชนาการที่ใช่ สำหรับแมวของคุณ
@@ -86,18 +88,12 @@ export default function HomePage() {
       </section>
 
       {/* ⭐ สินค้าใหม่ */}
-      <HomeSection
-        title="สินค้าใหม่ (New Arrivals)"
-        link="/products?new=true"
-      >
+      <HomeSection title="สินค้าใหม่ (New Arrivals)" link="/products?new=true">
         <HorizontalScroll products={products.slice(0, 5)} addToCart={addToCart} />
       </HomeSection>
 
       {/* ⭐ สินค้าแนะนำตามสายพันธุ์ */}
-        <HomeSection 
-          title="สินค้าแนะนำตามสายพันธุ์"
-          link="/products"
-        >
+      <HomeSection title="สินค้าแนะนำตามสายพันธุ์" link="/products">
         {Object.keys(breedGroups).length === 0 ? (
           <p className="text-gray-500">ยังไม่มีสินค้าแยกตามสายพันธุ์</p>
         ) : (
@@ -115,10 +111,7 @@ export default function HomePage() {
 
       {/* Toast */}
       {toast && (
-        <div className="
-          fixed bottom-6 left-1/2 -translate-x-1/2 
-          bg-black/80 text-white px-5 py-3 rounded-xl shadow-lg z-50
-        ">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-white px-5 py-3 rounded-xl shadow-lg z-50">
           {toast}
         </div>
       )}
@@ -136,10 +129,7 @@ function HomeSection({ title, link, children }) {
         <h2 className="text-3xl font-bold text-gray-900">{title}</h2>
 
         {link && (
-          <Link
-            to={link}
-            className="text-red-600 font-medium hover:underline"
-          >
+          <Link to={link} className="text-red-600 font-medium hover:underline">
             ดูทั้งหมด →
           </Link>
         )}
@@ -149,7 +139,6 @@ function HomeSection({ title, link, children }) {
     </section>
   );
 }
-
 
 /* ----------------------------------------
    Horizontal Scroll + Arrows
@@ -210,15 +199,12 @@ function HorizontalScroll({ products, addToCart }) {
   );
 }
 
-
 /* ----------------------------------------
    PRODUCT CARD
 ---------------------------------------- */
 function PremiumProductCard({ product, addToCart }) {
   return (
-    <div
-      className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition"
-    >
+    <div className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition">
       <div className="relative">
         <Link to={`/product/${product.id}`}>
           <img

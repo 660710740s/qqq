@@ -9,10 +9,8 @@ export default function LoginPage() {
 
   const navigate = useNavigate();
 
-  // ⭐ Backend URL
-  const API_URL =
-    process.env.REACT_APP_API_URL ||
-    "https://super-duper-umbrella-4jrp44qjjggvc5qqj-8080.app.github.dev";
+  // ⭐ API → ผ่าน nginx → backend
+  const API_URL = "/api";
 
   const handleLogin = async () => {
     setError("");
@@ -22,15 +20,16 @@ export default function LoginPage() {
       return;
     }
 
+    console.log("Calling:", `${API_URL}/login`);
+
     try {
-      const res = await axios.post(`${API_URL}/api/login`, {
+      const res = await axios.post(`${API_URL}/login`, {
         email,
         password,
       });
 
       const { id, email: userEmail, role, token } = res.data;
 
-      // ⭐ เก็บข้อมูลใน localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userEmail", userEmail);
@@ -39,35 +38,23 @@ export default function LoginPage() {
 
       alert("เข้าสู่ระบบสำเร็จ!");
 
-      // ⭐ เปลี่ยนหน้าเมื่อเข้าสู่ระบบสำเร็จ
-      if (role === "admin") {
-        navigate("/admin/products");
-      } else {
-        navigate("/");
-      }
+      if (role === "admin") navigate("/admin/products");
+      else navigate("/");
     } catch (err) {
       console.error("Login error:", err);
-
-      if (err.response) {
-        setError(err.response.data.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-      } else {
-        setError("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
-      }
+      setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border">
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-6">
-          เข้าสู่ระบบ
-        </h1>
+
+        <h1 className="text-3xl font-bold text-center mb-6">เข้าสู่ระบบ</h1>
 
         <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
           <div>
-            <label className="block text-gray-700 font-medium mb-1">
-              อีเมล
-            </label>
+            <label className="block text-gray-700 font-medium mb-1">อีเมล</label>
             <input
               type="email"
               value={email}
@@ -79,9 +66,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-1">
-              รหัสผ่าน
-            </label>
+            <label className="block text-gray-700 font-medium mb-1">รหัสผ่าน</label>
             <input
               type="password"
               value={password}
@@ -92,9 +77,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {error && (
-            <p className="text-red-600 text-sm text-center">{error}</p>
-          )}
+          {error && <p className="text-red-600 text-sm text-center">{error}</p>}
 
           <button
             type="button"

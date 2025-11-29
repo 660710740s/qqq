@@ -1,47 +1,37 @@
 package repository
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
-
-	"catfoodstore_backend/internal/models"
+	"errors"
 )
 
-type UserRepository interface {
-	GetByEmail(ctx context.Context, email string) (*models.User, error)
+type User struct {
+	ID       int
+	Email    string
+	Password string
+	Role     string
 }
 
-type userRepository struct {
+type UserRepository struct {
 	db *sql.DB
 }
 
 func NewUserRepository(db *sql.DB) UserRepository {
-	return &userRepository{db: db}
+	return UserRepository{db: db}
 }
 
-func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
-	const query = `
-    	SELECT id, email, password, role, created_at
-    	FROM users
-    	WHERE email = $1
-	`
+func (r UserRepository) FindByEmail(email string) (*User, error) {
+	row := r.db.QueryRow(`
+        SELECT id, email, password, role
+        FROM users
+        WHERE email = $1
+    `, email)
 
-
-	var u models.User
-	err := r.db.QueryRowContext(ctx, query, email).Scan(
-		&u.ID,
-		&u.Email,
-		&u.Password,
-		&u.Role,
-		&u.CreatedAt,
-	)
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
+	u := &User{}
+	err := row.Scan(&u.ID, &u.Email, &u.Password, &u.Role)
 	if err != nil {
-		return nil, fmt.Errorf("GetByEmail: %w", err)
+		return nil, errors.New("ไม่พบผู้ใช้")
 	}
 
-	return &u, nil
+	return u, nil
 }

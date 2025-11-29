@@ -2,54 +2,50 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
-	"catfoodstore_backend/internal/auth"
 	"catfoodstore_backend/internal/service"
+
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
+var jwtKey = []byte("MY_SECRET_KEY")
+
 type UserHandler struct {
-	userService service.UserService
+	service *service.UserService
 }
 
-func NewUserHandler(userService service.UserService) *UserHandler {
-	return &UserHandler{userService: userService}
+func NewUserHandler(s *service.UserService) *UserHandler {
+	return &UserHandler{service: s}
 }
 
 func (h *UserHandler) RegisterRoutes(r *gin.Engine) {
 	api := r.Group("/api")
-	{
-		api.POST("/login", h.Login)
-	}
-}
-
-type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	api.POST("/login", h.Login)
 }
 
 func (h *UserHandler) Login(c *gin.Context) {
-	var req LoginRequest
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
 		return
 	}
 
-	user, err := h.userService.Login(c.Request.Context(), req.Email, req.Password)
+	user, err := h.service.Login(req.Email, req.Password)
 	if err != nil {
-		if err == service.ErrInvalidCredentials {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "อีเมลหรือรหัสผ่านไม่ถูกต้อง"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	// ใช้ auth.GenerateJWT
-	token, err := auth.GenerateJWT(user.ID, user.Role)
+	// Generate JWT
+	tokenString, err := generateToken(user.ID, user.Role)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot generate token"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "token error"})
 		return
 	}
 
@@ -57,6 +53,17 @@ func (h *UserHandler) Login(c *gin.Context) {
 		"id":    user.ID,
 		"email": user.Email,
 		"role":  user.Role,
-		"token": token,
+		"token": tokenString,
 	})
+}
+
+func generateToken(id int, role string) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id": id,
+		"role":    role,
+		"exp":     time.Now().Add(72 * time.Hour).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtKey)
 }
